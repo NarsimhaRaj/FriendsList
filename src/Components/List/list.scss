@@ -1,0 +1,42 @@
+ul {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    padding: 0;
+    border: 1px solid darkgray;
+    
+    li {
+        padding: 10px;
+        background-color: #efefef;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        list-style-type: none;
+        border: none;
+        border-bottom: 1px solid lightgray;
+        height: 60px;
+
+        .friend-name {
+            width: 70%;
+            h3, p {
+                margin: 0;             
+                line-height: 1.40;
+                font-weight: normal;
+                font-family: 'Times New Roman', Times, serif;
+            }
+            h3 {
+                font-size: 24px;   
+            }
+            p {
+                font-size: 16px;                
+            }
+        }
+
+        .yellow-star{
+            background-color: gold;
+        }
+        .normal-star{
+            background-color: white;
+        }
+    }
+}
