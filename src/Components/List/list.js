@@ -12,10 +12,10 @@ function FriendDetails({ index, friend, makeItStarred, deleteFromList }) {
                 <h3>{friend.name}</h3>
                 <p>is your friend</p>
             </div>
-            <div className="star">
-                <FontAwesomeIcon onClick={()=>makeItStarred(index)} className={friend.starred ? "yellow-star" : "normal-star"} icon={faStar} />
+            <div className="star" onClick={() => makeItStarred(index)} >
+                <FontAwesomeIcon className={friend.starred ? "yellow-star" : "normal-star"} icon={faStar} />
             </div>
-            <div className="delete" onClick={()=>deleteFromList(index)}>
+            <div className="delete" onClick={() => deleteFromList(index)}>
                 <FontAwesomeIcon icon={faTrashAlt} />
             </div>
         </li>
@@ -24,51 +24,48 @@ function FriendDetails({ index, friend, makeItStarred, deleteFromList }) {
 
 function List({ searchVal }) {
 
-    var [friendsList, setFriendsList] = useState([friendsData.data]);
-    var [currentIndex, setCurrentIndex] = useState(0);
-    var [totalPages, setTotalPages] = useState(()=> friendsData.data.length/4);
-    var [startIndex, setStartIndex] = useState(0);
-    var [endIndex, setEndIndex] = useState(()=>{
-        return friendsData.data.length < 4 ? friendsData.data.length : 4;
-    });
-    const sortByStarred = function(list){
-        return list.sort((a, b) => (a.starred || (!a.starred && !b.starred)) ? a : b);
+    var [friendsList, setFriendsList] = useState(friendsData.data);
+    var [currentIndex, setCurrentIndex] = useState(1);
+    var [totalPages, setTotalPages] = useState(() => (friendsData.data.length / 4));
+    var [friendsListCopy, setFriendsListCopy] = useState(friendsData.data);
+
+    const sortByStarred = function (list) {
+        let sortedList = list.sort((a, b) => a.starred ? -1 : (b.starred ? 1 : 0));
+        setFriendsList(sortedList);
+        setFriendsListCopy(list);
     }
 
-    const filterByName = function(list){
-        return list.filter((item) => item.name.indexOf(searchVal) !== -1);
+    const filterByName = function (list) {
+        var newlist = list.filter((item) => item["name"].toLowerCase().indexOf(searchVal) !== -1);
+        setFriendsList([...newlist]);
+        let numOfPages = Math.ceil(newlist.length / 4);
+        setTotalPages(numOfPages);
     }
 
-    const makeItStarred = function(index){
-        let friend = friendsList[index];
-        let list = deleteFromList(index);
-        friend.starred = !friend.starred;
-        list.push(friend);
-        setFriendsList(sortByStarred(list));
+    const makeItStarred = function (id) {
+        let list = [...friendsList];
+        let friend = list[id];
+        friend["starred"] = !friend["starred"];
+        sortByStarred(list);
     }
 
-    const deleteFromList = function(index){
-        friendsList.splice(index, 1);
-        setFriendsList(friendsList);
-        return friendsList;
+    const deleteFromList = function (index) {
+        let list = [...friendsList];
+        list.splice(index, 1);
+        setFriendsList(list);
+        setFriendsListCopy(list);
+        let numOfPages = Math.ceil(list.length / 4);
+        setTotalPages(numOfPages);
+        return list;
     }
 
     useEffect(() => {
-        let data = friendsData.data;
-        let list = data.length >= 4 ? data.slice(0, 4) : data;
-        list =sortByStarred(filterByName(list));
-        setFriendsList(list);
-        setTotalPages(list.length);
+        let list = [...friendsListCopy];
+        filterByName(list);        
     }, [searchVal]);
 
-    const onPageClick = function(index) {
+    const onPageClick = function (index) {
         setCurrentIndex(index);
-        setStartIndex(4*index);
-        let endIndex = startIndex + 4;
-        if(friendsList.length < endIndex){
-            endIndex = friendsList.length;
-        }
-        setEndIndex(endIndex);
     }
 
     return (
@@ -76,8 +73,17 @@ function List({ searchVal }) {
             <ul>
                 {
                     friendsList
-                        .slice(startIndex, endIndex)
-                        .map((friend, index) => <FriendDetails makeItStarred={makeItStarred} deleteFromList={deleteFromList} key={index} index={index} friend={friend} />)
+                        .map((friend, index) => {
+                            let startIndex = (currentIndex - 1) * 4;
+                            if (startIndex < friendsList.length) {
+                                let endIndex = friendsList.length > (startIndex + 4) ? (startIndex + 4) : friendsList.length;
+                                if (startIndex <= index && index < endIndex) {
+                                    return <FriendDetails makeItStarred={makeItStarred} index={index} deleteFromList={deleteFromList} key={index} friend={friend} />
+                                }
+                                return null;
+                            }
+                            return null;
+                        })
                 }
             </ul>
             <Pagination currentPage={currentIndex} totalPages={totalPages} onPageClick={onPageClick} />
