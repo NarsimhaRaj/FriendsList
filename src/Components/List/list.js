@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useImperativeHandle, useState } from 'react';
 import * as friendsData from '../../JSONData/friendslist.json';
 import { faStar, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
 import './list.scss';
@@ -22,12 +22,29 @@ function FriendDetails({ index, friend, makeItStarred, deleteFromList }) {
     );
 }
 
-function List({ searchVal }) {
+const List= React.forwardRef(({ searchVal, myFriendsList }, ref) => {
 
-    var [friendsList, setFriendsList] = useState(friendsData.data);
+    var [friendsList, setFriendsList] = useState(myFriendsList);
     var [currentIndex, setCurrentIndex] = useState(1);
     var [totalPages, setTotalPages] = useState(() => (friendsData.data.length / 4));
     var [friendsListCopy, setFriendsListCopy] = useState(friendsData.data);
+
+    useImperativeHandle(ref,()=>({
+        updateFriendsList : (searchText)=>{
+            let friend = {
+                "name": searchText,
+                "id": friendsList.length,
+                "city": "",
+                "starred": false
+              }
+              let list = [...friendsListCopy];
+              list.push(friend);
+              setFriendsList(list);
+              setFriendsListCopy(list);
+              let numOfPages = Math.ceil(list.length / 4);
+              setTotalPages(numOfPages);
+        }
+    })); 
 
     const sortByStarred = function (list) {
         let sortedList = list.sort((a, b) => a.starred ? -1 : (b.starred ? 1 : 0));
@@ -54,6 +71,9 @@ function List({ searchVal }) {
         list.splice(index, 1);
         setFriendsList(list);
         setFriendsListCopy(list);
+        if(list.length%4==0){
+            setCurrentIndex((list.length/4));
+        }
         let numOfPages = Math.ceil(list.length / 4);
         setTotalPages(numOfPages);
         return list;
@@ -89,6 +109,6 @@ function List({ searchVal }) {
             <Pagination currentPage={currentIndex} totalPages={totalPages} onPageClick={onPageClick} />
         </div>
     );
-}
+});
 
 export default List;
